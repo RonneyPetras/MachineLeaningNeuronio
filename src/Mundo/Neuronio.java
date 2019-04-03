@@ -1,80 +1,94 @@
 package Mundo;
 
+import java.util.Scanner;
+
 public class Neuronio {
 	private int[][] entradas = {
 		{1,1,1,1},
-		{1,1,1,0},
 		{1,1,0,1},
-		{1,1,0,0},
 		{1,0,1,1},
-		{1,0,1,0},
 		{1,0,0,1},
-		{1,0,0,0},
+		{0,1,1,1},
+		{0,1,0,1},
+		{0,0,1,1},
+		{0,0,0,1},
 	};
-	private double[] pesosAnterior = {0.0, 0.0, 0.0, 0.0};
-	private double[] pesos = {0.0, 0.0, 0.0, 0.0};
-	private static boolean VALIDACAO = true;
+
 	private double limiar;
+	private double yEnt;
 	public double taxaAprendizado;
+	private int[] valoresEsperadosOR = {1, 1, 1, 1, 1, 1, 1, 0};
+	private double[] pesos = {0.0, 0.0, 0.0, 0.0};
+	private int[] fYents= new int[8];
+	private static boolean VALIDACAO = true;
+	private int f;
 	
-	public Neuronio(double limiar, double taxaAprendizado) {
+	public void setLimiar(double limiar) {
 		this.limiar = limiar;
+	}
+
+	public void setTaxaAprendizado(double taxaAprendizado) {
 		this.taxaAprendizado = taxaAprendizado;
 	}
 	
-	public int perceptor() {
-		double yent = 0.0;
-		int hebb = 0;
-		int cont = -1;
+	public void perceptor() {
+
 		while(VALIDACAO) {
-			//System.out.println("contador" + cont++);
-			//Verifica a variação dos pesos
-			for(int i=0; i<this.pesos.length; i++) {
-				VALIDACAO = !(VALIDACAO && (this.pesos[i] == this.pesosAnterior[i]));
-				if(VALIDACAO) {
-					System.out.println("Parou!");
-					break;
-				}
-					
-					
-			}
-			
-			//somatorio das entradas no neuronio
-			for(int i=0; i<this.entradas.length; i++) {
-				for(int j=0; j<this.entradas[0].length; j++) {
-					yent += this.entradas[i][j] * this.pesos[j];
-				}
-			}
-			
-			//calculo da saída do neuronio
-			hebb = this.hebb(yent);
-			
-			//redistribuir peso
-			for(int i=0; i<this.entradas.length; i++) {
-				for(int j=0; j<this.entradas[0].length; j++) {
-					this.pesosAnterior[j] = this.pesos[j];
-					this.pesos[j] += (this.pesos[j] - this.atualizaPesos(hebb, this.limiar, this.entradas[i][j]));
+			int count = 0;
+			for(int i = 0; i < this.entradas.length; i++) {
+				
+				this.yEnt = 0;
+				
+				for(int j = 0; j < this.entradas[0].length; j++) {
+					this.yEnt += this.entradas[i][j] * this.pesos[j];
 				}
 				
+				f = this.funcaoDoYent(this.yEnt);
+				this.fYents[i] = f;
+				
+				if(f!=this.valoresEsperadosOR[i]) {
+					for(int a=0; a<this.pesos.length;a++) {
+						this.pesos[a] += this.taxaAprendizado * (this.valoresEsperadosOR[i]-f) * this.entradas[i][a];
+					}
+				}else {
+					count++;
+				}
 			}
+			if(count == 8) {
+				VALIDACAO=false;
+				System.out.print("Pesos corretos: ");
+				for(double peso: this.pesos) {
+					System.out.print(peso +" ");
+				}
+				System.out.println();
+				
+			}
+			
 		}
-		return 0;
+		
+		Scanner sc = new Scanner(System.in);
+		int[] entradas = new int[3];
+		double produto = 0.0;
+		for(int i =0;i< entradas.length; i++) {
+			System.out.println("Informe numero: ");
+			entradas[i] =sc.nextInt();
+		}
+		
+		for( int i =0;i< entradas.length; i++) {
+			produto += entradas[i] * this.pesos[i];
+		}
+		produto += 1 * this.pesos[3];
+		System.out.println("Produto " + produto);
+		System.out.println("Resposta: ");
+		System.out.println(this.funcaoDoYent(produto));
 	}
 	
-	private int hebb(double yent) {
-		if(yent>this.limiar) 
+	private int funcaoDoYent(double yaet) {
+		if(yaet>this.limiar) 
 			return 1;
-		else if(yent<-this.limiar)
-			return -1;
-		else
+		else if((yaet <= this.limiar) && (yaet >= -this.limiar))
 			return 0;
-	}
-	
-	private double atualizaPesos(double hebb, double limiar, int xis) {
-		System.out.println(hebb);
-		if(hebb != limiar) {
-			return this.taxaAprendizado * (this.limiar - hebb) * xis;
-		}
-		return hebb;
+		else
+			return -1;
 	}
 }
